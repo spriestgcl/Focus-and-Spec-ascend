@@ -1,0 +1,376 @@
+{
+  "binList": [
+    {
+      "implMode": "high_performance",
+      "int64Mode": false,
+      "simplifiedKeyMode": 0,
+      "simplifiedKey": [
+        "DispatchGmmCombineDecode/d=0,p=1/27,2/3,2/2,29/0,2/2,29/0,2/0,2/27,2/3,2",
+        "DispatchGmmCombineDecode/d=0,p=0/27,2/3,2/2,29/0,2/2,29/0,2/0,2/27,2/3,2",
+        "DispatchGmmCombineDecode/d=1,p=1/27,2/3,2/2,29/0,2/2,29/0,2/0,2/27,2/3,2",
+        "DispatchGmmCombineDecode/d=1,p=0/27,2/3,2/2,29/0,2/2,29/0,2/0,2/27,2/3,2"
+      ],
+      "staticKey": "2eb1621f3970b5f40b95a7e818c46c9b80c7e1b73fa3f852584d62fb73cb2461,342d9ea88dfd82be06b80b48189ae50977045a5934867f87120781ae8747f2a4",
+      "inputs": [
+        {
+          "name": "x",
+          "index": 0,
+          "dtype": "bfloat16",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_ids",
+          "index": 1,
+          "dtype": "int32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm1_permuted_weight",
+          "index": 2,
+          "dtype": "int8",
+          "format": "FRACTAL_NZ",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm1_permuted_weight_scale",
+          "index": 3,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm2_weight",
+          "index": 4,
+          "dtype": "int8",
+          "format": "FRACTAL_NZ",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm2_weight_scale",
+          "index": 5,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_scales",
+          "index": 6,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_smooth_scales",
+          "index": 7,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "optional",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "x_active_mask",
+          "index": 8,
+          "dtype": "bool",
+          "format": "ND",
+          "paramType": "optional",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "index": 0,
+          "dtype": "bfloat16",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "ep_recv_count",
+          "index": 1,
+          "dtype": "int32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "group_ep",
+          "dtype": "str",
+          "value": ""
+        },
+        {
+          "name": "ep_rank_size",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "ep_rank_id",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "moe_expert_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "share_expert_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "share_expert_rank_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "quant_mode",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "global_bs",
+          "dtype": "int",
+          "value": 0
+        }
+      ],
+      "opMode": "dynamic",
+      "optionalInputMode": "gen_placeholder",
+      "deterministic": "ignore",
+      "optionalOutputMode": "gen_placeholder",
+      "binInfo": {
+        "jsonFilePath": "ascend910_93/dispatch_gmm_combine_decode/DispatchGmmCombineDecode_5a77e580c9e8093067e8832c9a3b051c.json"
+      }
+    },
+    {
+      "implMode": "high_performance",
+      "int64Mode": false,
+      "simplifiedKeyMode": 0,
+      "simplifiedKey": [
+        "DispatchGmmCombineDecode/d=0,p=1/1,2/3,2/2,29/0,2/2,29/0,2/0,2/1,2/3,2",
+        "DispatchGmmCombineDecode/d=0,p=0/1,2/3,2/2,29/0,2/2,29/0,2/0,2/1,2/3,2",
+        "DispatchGmmCombineDecode/d=1,p=1/1,2/3,2/2,29/0,2/2,29/0,2/0,2/1,2/3,2",
+        "DispatchGmmCombineDecode/d=1,p=0/1,2/3,2/2,29/0,2/2,29/0,2/0,2/1,2/3,2"
+      ],
+      "staticKey": "1836de95dfe72a2b22bd98dc801368bf6bf7df4f64b7fede8cb967192275acf8,946a9c6557b8010845488e56c445eb7627f85d6545063575a7d0c83c489c3a3f",
+      "inputs": [
+        {
+          "name": "x",
+          "index": 0,
+          "dtype": "float16",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_ids",
+          "index": 1,
+          "dtype": "int32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm1_permuted_weight",
+          "index": 2,
+          "dtype": "int8",
+          "format": "FRACTAL_NZ",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm1_permuted_weight_scale",
+          "index": 3,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm2_weight",
+          "index": 4,
+          "dtype": "int8",
+          "format": "FRACTAL_NZ",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "gmm2_weight_scale",
+          "index": 5,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_scales",
+          "index": 6,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "expert_smooth_scales",
+          "index": 7,
+          "dtype": "float32",
+          "format": "ND",
+          "paramType": "optional",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "x_active_mask",
+          "index": 8,
+          "dtype": "bool",
+          "format": "ND",
+          "paramType": "optional",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "index": 0,
+          "dtype": "float16",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        },
+        {
+          "name": "ep_recv_count",
+          "index": 1,
+          "dtype": "int32",
+          "format": "ND",
+          "paramType": "required",
+          "shape": [
+            -2
+          ],
+          "format_match_mode": "FormatAgnostic"
+        }
+      ],
+      "attrs": [
+        {
+          "name": "group_ep",
+          "dtype": "str",
+          "value": ""
+        },
+        {
+          "name": "ep_rank_size",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "ep_rank_id",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "moe_expert_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "share_expert_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "share_expert_rank_num",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "quant_mode",
+          "dtype": "int",
+          "value": 0
+        },
+        {
+          "name": "global_bs",
+          "dtype": "int",
+          "value": 0
+        }
+      ],
+      "opMode": "dynamic",
+      "optionalInputMode": "gen_placeholder",
+      "deterministic": "ignore",
+      "optionalOutputMode": "gen_placeholder",
+      "binInfo": {
+        "jsonFilePath": "ascend910_93/dispatch_gmm_combine_decode/DispatchGmmCombineDecode_645bd4106c4a68cbc4d74e0b65925c3d.json"
+      }
+    }
+  ]
+}

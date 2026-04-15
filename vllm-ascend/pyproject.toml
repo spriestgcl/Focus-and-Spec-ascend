@@ -1,0 +1,25 @@
+[build-system]
+# Should be mirrored in requirements.txt
+requires = [
+    "cmake>=3.26",
+    "decorator",
+    "einops",
+    "numpy<2.0.0",
+    "packaging",
+    "pip",
+    "pybind11",
+    "pyyaml",
+    "scipy",
+    "setuptools>=64",
+    "setuptools-scm>=8",
+    "torch-npu==2.5.1.post1",
+    "torch>=2.5.1",
+    "torchvision<0.21.0",
+    "wheel",
+    "msgpack",
+    "quart",
+    "numba",
+    # Remove after https://github.com/vllm-project/vllm-ascend/issues/1470
+    "transformers<4.53.0",
+]
+build-backend = "setuptools.build_meta"
