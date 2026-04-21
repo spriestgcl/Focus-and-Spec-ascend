@@ -2,19 +2,22 @@ set -euo pipefail
 set -x
 
 export RAY_DEDUP_LOGS=0
+# NPU 环境下先关闭 torch compile/dynamo，优先保证兼容性和稳定性。
 export TORCHDYNAMO_DISABLE=1
+# 当前仓库的 vLLM-ascend LoRA 路径需要这个开关来接管 LoRA 请求。
 export VERL_ENABLE_VLLM_LORA_HIJACK=1
 
-TRAIN_FILE=${TRAIN_FILE:-/home/deepmath/train.parquet}
-TEST_FILE=${TEST_FILE:-/home/deepmath/test.parquet}
+# 以下改成环境变量默认值，方便在 NPU 机器上反复覆盖调参，不必每次改脚本正文。
+TRAIN_FILE=${TRAIN_FILE:-/home/deepmath/train_1k.parquet}
+TEST_FILE=${TEST_FILE:-/home/deepmath/train_1k.parquet}
 MODEL_PATH=${MODEL_PATH:-/mnt/model/gcl/Qwen2.5-7B-Instruct}
 LOG_FILE=${LOG_FILE:-0306_2a100_qwen3-1.7b_pergpubs8_totalbs16_8k_origin_verl.log}
-NPROC_PER_NODE=${NPROC_PER_NODE:-2}
+NPROC_PER_NODE=${NPROC_PER_NODE:-4}
 TP_SIZE=${TP_SIZE:-1}
-TRAIN_BATCH_SIZE=${TRAIN_BATCH_SIZE:-2}
+TRAIN_BATCH_SIZE=${TRAIN_BATCH_SIZE:-4}
 MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-1024}
 MAX_RESPONSE_LENGTH=${MAX_RESPONSE_LENGTH:-4096}
-PPO_MINI_BATCH_SIZE=${PPO_MINI_BATCH_SIZE:-2}
+PPO_MINI_BATCH_SIZE=${PPO_MINI_BATCH_SIZE:-4}
 PPO_MICRO_BATCH_SIZE_PER_GPU=${PPO_MICRO_BATCH_SIZE_PER_GPU:-1}
 ROLLOUT_LOGPROB_MICRO_BATCH_SIZE_PER_GPU=${ROLLOUT_LOGPROB_MICRO_BATCH_SIZE_PER_GPU:-1}
 REF_LOGPROB_MICRO_BATCH_SIZE_PER_GPU=${REF_LOGPROB_MICRO_BATCH_SIZE_PER_GPU:-1}
@@ -24,23 +27,26 @@ ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-32768}
 ROLLOUT_FREE_CACHE_ENGINE=${ROLLOUT_FREE_CACHE_ENGINE:-False}
 ROLLOUT_LOAD_FORMAT=${ROLLOUT_LOAD_FORMAT:-safetensors}
 ROLLOUT_LAYERED_SUMMON=${ROLLOUT_LAYERED_SUMMON:-True}
-FAST_SMOKE_RUN=${FAST_SMOKE_RUN:-1}
-TRAIN_MAX_SAMPLES=${TRAIN_MAX_SAMPLES:-64}
+# 下面这组是调试/冒烟跑开关；默认关闭，主脚本直接使用全量训练/验证集。
+FAST_SMOKE_RUN=${FAST_SMOKE_RUN:-0}
+TRAIN_MAX_SAMPLES=${TRAIN_MAX_SAMPLES:-4}
 VAL_MAX_SAMPLES=${VAL_MAX_SAMPLES:-64}
+# 下面这组是 NPU 版新增的 LoRA 相关参数。
 USE_LORA=${USE_LORA:-1}
 LORA_RANK=${LORA_RANK:-16}
 LORA_ALPHA=${LORA_ALPHA:-32}
+# NPU/Ray 分布式启动时显式指定 master 地址和端口，避免多进程初始化不一致。
 MASTER_ADDR=${MASTER_ADDR:-127.0.0.1}
 MASTER_PORT=${MASTER_PORT:-29666}
 export MASTER_ADDR
 export MASTER_PORT
 
-# Prefer using currently idle NPUs for quick validation.
-export ASCEND_RT_VISIBLE_DEVICES=${ASCEND_RT_VISIBLE_DEVICES:-12,13}
+# 默认只暴露指定 NPU 卡，避免误占满整机。
+export ASCEND_RT_VISIBLE_DEVICES=${ASCEND_RT_VISIBLE_DEVICES:-12,13,14,15}
 
-# Fast-fail preflight: catch vllm-ascend/vllm import-layout issues in seconds,
-# instead of waiting for full data/model initialization before crashing.
-if [ "${VLLM_ASCEND_PREFLIGHT:-1}" = "1" ]; then
+# 预检查：在真正起训练前，先验证 vllm-ascend 关键模块能否正常 import，
+# 这样环境有问题时可以快速失败，而不是等模型和数据初始化很久后再报错。
+if [ "${VLLM_ASCEND_PREFLIGHT:-0}" = "1" ]; then
   PYTHONUNBUFFERED=1 python3 - <<'PY'
 import importlib
 import traceback
@@ -71,14 +77,14 @@ fi
 
 EXTRA_DATA_ARGS=()
 if [ "${FAST_SMOKE_RUN}" = "1" ]; then
-  # Keep each debug iteration short: sample tiny data and skip expensive
-  # full-dataset overlong-prompt filtering in smoke mode.
+  # 冒烟模式下只抽少量训练/验证样本，并关闭全量超长样本过滤，缩短调试时间。
   EXTRA_DATA_ARGS+=(
     data.train_max_samples="${TRAIN_MAX_SAMPLES}"
     data.val_max_samples="${VAL_MAX_SAMPLES}"
     data.filter_overlong_prompts=False
   )
 else
+  # 正常训练时恢复为全量数据过滤逻辑。
   EXTRA_DATA_ARGS+=(
     data.filter_overlong_prompts=True
   )
@@ -86,6 +92,7 @@ fi
 
 EXTRA_MODEL_ARGS=()
 if [ "${USE_LORA}" = "1" ]; then
+  # NPU 版新增：把 LoRA 配置通过命令行传给 actor/model。
   EXTRA_MODEL_ARGS+=(
     actor_rollout_ref.model.lora_rank="${LORA_RANK}"
     actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}"
@@ -94,8 +101,8 @@ if [ "${USE_LORA}" = "1" ]; then
 fi
 
 if [ "${USE_LORA}" = "1" ]; then
-  # vLLM TensorLoRARequest in this fork uses a fixed local adapter path.
-  # Ensure the placeholder adapter config exists to avoid HF/network lookup.
+  # 当前分支的 vLLM TensorLoRARequest 会读取固定本地 adapter 目录。
+  # 这里提前生成一个占位 adapter_config，避免运行时去做 HF/远端查找。
   python3 - <<'PY'
 import json
 import os
@@ -124,6 +131,13 @@ adapter_cfg = {
 PY
 fi
 
+# 相比 GPU 版，这里额外注入了几类 NPU/调试专用参数：
+# 1. EXTRA_DATA_ARGS：控制冒烟跑的数据量和过滤策略。
+# 2. EXTRA_MODEL_ARGS：注入 LoRA 配置。
+# 3. data.truncation='error'：超长样本直接报错，避免悄悄截断。
+# 4. use_torch_compile=False：NPU 路径关闭 compile，优先稳定。
+# 5. rollout.load_format / rollout.layered_summon：vLLM-ascend 的加载与内存行为开关。
+# 6. trainer.device=npu：显式切到 Ascend/NPU 后端。
 PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     data.train_files="${TRAIN_FILE}" \

@@ -143,9 +143,16 @@ conda activate verl-ascend-local
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 cd /root/Focus-and-Spec-ascend/verl
 ray stop --force || true
-LOG_FILE=codex_grpo_retry36.log bash wyj_test/run_grpo.sh
+LOG_FILE=base.log bash wyj_test/run_grpo.sh
+LOG_FILE=redundant.log bash wyj_test/run_redundant.sh
 '
 ```
+ps -ef | grep -E 'ray|gcs_server|raylet|dashboard' | grep -v grep
+pkill -f raylet
+pkill -f gcs_server
+pkill -f 'ray::'
+pkill -f dashboard
+
 
 ### 7.3 当前稳定参数（run_grpo.sh 默认值）
 
@@ -170,22 +177,22 @@ LOG_FILE=codex_grpo_retry36.log bash wyj_test/run_grpo.sh
 
 ### 7.5 今天完成的关键修复（总结）
 
-1. 修复/绕过 vllm-ascend sleep/camem 兼容问题，避免初始化即崩溃。  
-2. 在 VERL rollout 的 `release()` 路径加保护，绕过非 sleep 模式下断言。  
-3. 在 `run_grpo.sh` 增加 preflight 快速失败检查，避免长时间等待后才报 import 兼容错误。  
-4. 在 Ray runtime_env 显式透传 NPU 设备与关键环境变量（尤其 `ASCEND_RT_VISIBLE_DEVICES`），修复 worker 设备错绑导致的 OOM。  
-5. 引入 LoRA 调试路径并修复适配器配置缺失，绕开全参优化器 OOM。  
-6. 固定 rollout 相关加载策略（`safetensors + layered_summon`）提升 NPU 侧稳定性。  
+1. 修复/绕过 vllm-ascend sleep/camem 兼容问题，避免初始化即崩溃。
+2. 在 VERL rollout 的 `release()` 路径加保护，绕过非 sleep 模式下断言。
+3. 在 `run_grpo.sh` 增加 preflight 快速失败检查，避免长时间等待后才报 import 兼容错误。
+4. 在 Ray runtime_env 显式透传 NPU 设备与关键环境变量（尤其 `ASCEND_RT_VISIBLE_DEVICES`），修复 worker 设备错绑导致的 OOM。
+5. 引入 LoRA 调试路径并修复适配器配置缺失，绕开全参优化器 OOM。
+6. 固定 rollout 相关加载策略（`safetensors + layered_summon`）提升 NPU 侧稳定性。
 
 ### 7.6 已知现象（目前不阻塞）
 
-- 日志中仍会出现 `No tokenizer found in /simon-stub-path` 警告（已回退到 base tokenizer，不阻塞训练）。  
-- `Failed to register custom ops` 警告仍存在，可能影响性能，但当前可跑通。  
+- 日志中仍会出现 `No tokenizer found in /simon-stub-path` 警告（已回退到 base tokenizer，不阻塞训练）。
+- `Failed to register custom ops` 警告仍存在，可能影响性能，但当前可跑通。
 
 ### 7.7 从“调试模式”切到“正式训练”的建议
 
 先只改这几项，逐步放大，避免回归难定位：
 
-1. `FAST_SMOKE_RUN=0`  
-2. 逐步增大 `TRAIN_BATCH_SIZE / PPO_MINI_BATCH_SIZE`  
-3. 将 `MAX_RESPONSE_LENGTH` 从 `4096` 下调到业务需要值（如 `1024` 或 `2048`）以提升迭代速度  
+1. `FAST_SMOKE_RUN=0`
+2. 逐步增大 `TRAIN_BATCH_SIZE / PPO_MINI_BATCH_SIZE`
+3. 将 `MAX_RESPONSE_LENGTH` 从 `4096` 下调到业务需要值（如 `1024` 或 `2048`）以提升迭代速度
